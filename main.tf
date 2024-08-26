@@ -1,21 +1,26 @@
+provider "azurerm" {
+  features {}
+}
+
 module "network" {
-  source = "./modules/network"
-  resource_group_name = var.resource_group_name
-  location = var.location
+  source       = "./modules/network"
+  project_name = "L2ProjectX"
 }
 
-module "vms" {
-  source = "./modules/vms"
-  resource_group_name = var.resource_group_name
-  location = var.location
-  public_ip_address_id = module.network.public_ip_address_id
-  subnet_id = module.network.subnet_id
+module "firewall" {
+  source       = "./modules/firewall"
+  network_name = module.network.network_name
+  project_name = "L2ProjectX"
 }
 
-module "load_balancer" {
-  source = "./modules/load_balancer"
-  resource_group_name = var.resource_group_name
-  location = var.location
-  backend_address_pool_id = module.load_balancer.backend_address_pool_id
-  virtual_machine_ids = module.vms.vm_ids
+module "vm" {
+  source       = "./modules/vm"
+  project_name = "L2ProjectX"
+  network_name = module.network.network_name
+  public_ip    = module.network.public_ip
+  security_rule_id = module.firewall.security_rule_id
+}
+
+output "vm_ids" {
+  value = module.vm.vm_ids
 }
