@@ -1,33 +1,36 @@
 resource "azurerm_resource_group" "main" {
-  name     = var.resource_group_name
-  location = var.location
+  name     = "${var.project_name}-rg"
+  location = "East US"
 }
 
 resource "azurerm_virtual_network" "main" {
-  name                = "L2ProjectX-VNet"
+  name                = "${var.project_name}-vnet"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
 }
 
 resource "azurerm_subnet" "main" {
-  name                 = "L2ProjectX-Subnet"
+  name                 = "${var.project_name}-subnet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
 resource "azurerm_public_ip" "main" {
-  name                = "L2ProjectX-PublicIP"
+  name                = "${var.project_name}-public-ip"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  allocation_method   = "Static"
+  allocation_method   = "Dynamic"
 }
 
-output "public_ip_address" {
-  value = azurerm_public_ip.main.ip_address
-}
+resource "azurerm_lb" "main" {
+  name                = "${var.project_name}-lb"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
 
-output "subnet_id" {
-  value = azurerm_subnet.main.id
+  frontend_ip_configuration {
+    name = "PublicIPAddress"
+    public_ip_address_id = azurerm_public_ip.main.id
+  }
 }
